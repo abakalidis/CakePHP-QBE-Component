@@ -1,0 +1,83 @@
+My QBE component
+----------------------------------------------------------------------------------------------------------
+Thanassis Bakalidis
+Octomber 19th -2011
+
+Place this file in you APP/controllers/components folder
+
+Initialize your controller like this :
+
+    var $components = array(
+        'Qbe' => array(
+            'ModelName' => 'Name of your model'
+        )
+    );
+
+There are two ways to create search forms:
+
+The first method is to place your search from input controlls on the same page as
+the results and the second is to have a different search page.
+
+----------------------------------------------------------------------------------------------------------
+When the search page is different then you need a controller action and a corrsponding view.
+
+The view will probably contain more or less the input fields of your model's edit page, but the 
+form's action must be the display results (most probably the index) page 
+
+Suggested code for the qbe controller method is somthing like this:
+
+    public function qbe()
+    {
+        $this->data = $this->Qbe->getLastSearchData();
+        // fill any combo boxes with data for the search
+    }
+
+The index (results) page code will now have to look more or less like this (suposing your modelname is Item)
+
+    public function index()
+    {
+        // retrieve search conditions
+        $conditions = $this->Qbe->getSearchConditions();
+        // then the paginated search data
+        $iems = $this->paginate(
+            $this->Item->alias,
+            $conditions);
+        // and pass them all to the view
+        $this->set('items', $items);
+    }
+
+The component remeber's the last set of values entered after search was last executed. To clear search
+criteria and display all your records, create an additional controller method and place the following 
+code in it.
+
+    public function showAll()
+    {
+        $this->Qbe->clearSearchCriteria();
+        $this->redirect(
+                    array(
+                        'action' => 'index'
+                    )
+                );
+    }
+
+----------------------------------------------------------------------------------------------------------
+Things are a bit simpler if you use the same page for displaying both search data and results.
+Inly difference is that you must provide a true valued parameter in the $this->Qbe->getSearchConditions();
+call in order to tell the component to restore the controller's data that created the search.
+Thus the index method should look like :
+
+    public function index()
+    {
+        // retrieve search conditions
+        $conditions = $this->Qbe->getSearchConditions( true);
+        // then the paginated search data
+        $iems = $this->paginate(
+            $this->Item->alias,
+            $conditions);
+        // and pass them all to the view
+        $this->set('items', $items);
+    }
+
+That way you obvisouly don't need a qbe() method but the markup of your index page will be
+much more complicated.
+
