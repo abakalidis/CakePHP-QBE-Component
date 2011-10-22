@@ -5,7 +5,7 @@
  * from a CakePHP Form into Model::find() acceptable conditions.
  *
  * @author: Thanassis Bakalidis
- * @version: 1.4.1
+ * @version: 1.4,1
  */
 class QbeComponent extends Object {
     // sesion keys for saving and retrieving controller data
@@ -86,9 +86,8 @@ class QbeComponent extends Object {
                     } else
                         continue;
                 } else {
-                    // we have normal input, remove any leading and trailing blanks
-                    $value = trim($value);
-                    // and check the operator given
+                    // we have normal input,
+                    // check the operator given
                     if ($operator === '' && !is_numeric($value)) {
                         // turn '='' to 'LIKE' for non numeric data
                         // numeric data will be treated as if they
@@ -168,6 +167,7 @@ class QbeComponent extends Object {
         if (is_array($input))
             return '';
 
+        $input = trim($input);
         foreach ($this->SQL_OPERATORS as $operator) {
             if ($this->startsWith($input, $operator)) {
                 $opLength = strlen($operator);
