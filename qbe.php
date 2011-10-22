@@ -5,7 +5,7 @@
  * from a CakePHP Form into Model::find() acceptable conditions.
  *
  * @author: Thanassis Bakalidis
- * @version: 1.4
+ * @version: 1.4.1
  */
 class QbeComponent extends Object {
     // sesion keys for saving and retrieving controller data
