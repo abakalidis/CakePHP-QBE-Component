@@ -15,7 +15,7 @@ class QbeComponent extends Object {
     // supported SQL operators
     private $SQL_OPERATORS = array(
         'IN', '<>', '>=', '<=',
-        '>', '<'
+        '>', '<', '~'
     );
 
     private $sessionDataKey;        // session key of last values of controller data
@@ -101,6 +101,11 @@ class QbeComponent extends Object {
                         // of the designated values
                         $operator = '';
                         $value = array_filter(explode( ' ', $value));
+                    } else if ($operator === '~') {
+                        // implement the between operator
+                        // values have to be passed like in the IN operator
+                        $operator = 'BETWEEN ? AND ?';
+                        $value = array_filter(explode( ' ', $value));
                     }
 
                     $conditionsValue = $value;
@@ -154,21 +159,34 @@ class QbeComponent extends Object {
         $this->owner->Session->delete($this->sessionConditionsKey);
     }
 
+    /*
+     * Check if the imput string starts with any of the known operators
+     * and if ti does extract the operator and trim it accordingly
+     */
     private function extractOperator(&$input)
     {
         if (is_array($input))
             return '';
 
-        $operator = strtoupper(strtok($input, ' '));
-
-        if (in_array($operator, $this->SQL_OPERATORS)) {
-            $opLength = strlen($operator);
-            $inputLength = strlen($input);
-            $input = trim(substr( $input, $opLength, $inputLength - $opLength));
-        } else {
-            $operator = '';
+        foreach ($this->SQL_OPERATORS as $operator) {
+            if ($this->startsWith($input, $operator)) {
+                $opLength = strlen($operator);
+                $inputLength = strlen($input);
+                $input = trim(substr( $input, $opLength, $inputLength - $opLength));
+                return $operator;
+            }
         }
-
-        return $operator;
+        return '';
     }
+
+    /*
+     * return true of haystack starts wioth needle
+     * Thanks to http://stackoverflow.com/questions/834303/php-startswith-and-endswith-functions
+     */
+    private function startsWith($haystack, $needle)
+    {
+        $length = strlen($needle);
+        return (substr($haystack, 0, $length) === $needle);
+    }
+
 }
