@@ -1,7 +1,9 @@
 My QBE component
 ----------------------------------------------------------------------------------------------------------
 Thanassis Bakalidis
-Octomber 19th -2011
+Created Octomber 19th -2011
+Update  April 19th 2012 Qbe now supports partial dates
+
 
 Place this file in you APP/controllers/components folder
 
@@ -15,7 +17,7 @@ Initialize your controller like this :
 
 There are two ways to create search forms:
 
-The first method is to place your search from input controlls on the same page as
+The first method is to place your search form input controlls on the same page as
 the results and the second is to have a different search page.
 
 ----------------------------------------------------------------------------------------------------------
@@ -24,7 +26,20 @@ When the search page is different then you need a controller action and a corrsp
 The view will probably contain more or less the input fields of your model's edit page, but the 
 form's action must be the display results (most probably the index) page 
 
-Suggested code for the qbe controller method is somthing like this:
+So your qbe view should contain an opening form tag like the following:
+<?php echo $this->Form->create('MyModel', array('action' => 'index'));?>
+Keep in mind also that select inputs should also provide a means for no selection so a logical PHP tag 
+for your select inputs in your qbe form should be somethingg like:
+<?php 
+	echo $this->Form->input(
+            'user_id',
+            array(
+                'empty' => __('All Values', true)
+            )
+        );
+?>
+
+Suggested code for the qbe controller method would be somthing like this:
 
     public function qbe()
     {

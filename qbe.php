@@ -74,17 +74,21 @@ class QbeComponent extends Object {
                 if (is_array($value)) {
                     // this can only be a date field
 
+                    // scan for posibly empty slots in the array and
+                    // convert them into &'s, so we may turn the search into a LIKE
+                    foreach ($value as $valueKey => $valueValue)
+                        if (empty($valueValue))
+                            $value[$valueKey] = '%';
+
                     $month = $value['month'];
                     $day = $value['day'];
                     $year = $value['year'];
 
                     // We want all three variables to be numeric so we 'll check their
                     // concatenation. After all PHP numbers as just strings with digits
-                    if (is_numeric($month.$day.$year) && checkdate( $month, $day, $year)) {
-                        $conditionsKey = $this->modelName.".$key";
-                        $conditionsValue = "$year-$month-$day";
-                    } else
-                        continue;
+                    if (!is_numeric($month.$day.$year) || !checkdate( $month, $day, $year))
+                        $operator = 'LIKE';
+                    $conditionsValue = "$year-$month-$day";
                 } else {
                     // we have normal input,
                     // check the operator given
@@ -108,9 +112,9 @@ class QbeComponent extends Object {
                     }
 
                     $conditionsValue = $value;
-                    $conditionsKey = $this->modelName.".$key $operator";
                 }
 
+                $conditionsKey = $this->modelName.".$key $operator";
                 // add the new condition entry
                 $conditions[trim($conditionsKey)] = $conditionsValue;
             }
