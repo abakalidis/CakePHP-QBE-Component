@@ -23,13 +23,11 @@ the results and the second is to have a different search page.
 ----------------------------------------------------------------------------------------------------------
 When the search page is different then you need a controller action and a corrsponding view.
 
-The view will probably contain more or less the input fields of your model's edit page, but the 
-form's action must be the display results (most probably the index) page 
+The view will probably contain more or less the input fields of your model's edit page, but the form's action must be the display results (most probably the index) page 
 
 So your qbe view should contain an opening form tag like the following:
 <?php echo $this->Form->create('MyModel', array('action' => 'index'));?>
-Keep in mind also that select inputs should also provide a means for no selection so a logical PHP tag 
-for your select inputs in your qbe form should be somethingg like:
+Keep in mind also that select inputs should also provide a means for no selection so a logical PHP tag for your select inputs in your qbe form should be somethingg like:
 <?php 
 	echo $this->Form->input(
             'user_id',
@@ -61,9 +59,7 @@ The index (results) page code will now have to look more or less like this (supo
         $this->set('items', $items);
     }
 
-The component remeber's the last set of values entered after search was last executed. To clear search
-criteria and display all your records, create an additional controller method and place the following 
-code in it.
+The component remeber's the last set of values entered after search was last executed. To clear search criteria and display all your records, create an additional controller method and place the following code in it.
 
     public function showAll()
     {
