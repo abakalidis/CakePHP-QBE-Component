@@ -5,7 +5,9 @@
  * from a CakePHP Form into Model::find() acceptable conditions.
  *
  * @author: Thanassis Bakalidis
- * @version: 1.4,1
+ * @version: 1.4.2
+ *
+ * Last update
  */
 class QbeComponent extends Object {
     // sesion keys for saving and retrieving controller data
@@ -14,13 +16,12 @@ class QbeComponent extends Object {
 
     // supported SQL operators
     private $SQL_OPERATORS = array(
-        'IN', '<>', '>=', '<=',
+        'IN ', '<>', '>=', '<=',
         '>', '<', '~'
     );
 
     private $sessionDataKey;        // session key of last values of controller data
     private $sessionConditionsKey;  // session key of last prepared search conditions
-    private $modelName;             // name of model to create search conditions for
 
     var $owner;     // the controller using the component
 
@@ -32,18 +33,15 @@ class QbeComponent extends Object {
     function initialize(&$controller, $settings=array())
     {
         $this->owner =& $controller;
-        $this->modelName = $settings['ModelName'];
 
         // create speciffic keys for the model andcontroller
-        $this->sessionConditionsKey = sprintf("%s-%s-%s",
+        $this->sessionConditionsKey = sprintf("%s-%s",
                                 self::CONDITIONS_SESSION_KEY,
-                                $this->owner->name,
-                                $this->modelName
+                                $this->owner->name
                             );
-        $this->sessionDataKey = sprintf("%s-%s-%s",
+        $this->sessionDataKey = sprintf("%s-%s",
                                 self::FORM_DATA_SESSION_KEY,
-                                $this->owner->name,
-                                $this->modelName
+                                $this->owner->name
                             );
     }
 
@@ -51,6 +49,7 @@ class QbeComponent extends Object {
      * @name getSearchConditions()
      * Return an array to be used as search conditions in a find
      * based on the controller's current data
+     *
      * @param restoreOwnerData  if set the controller's data will be restored
      * to values they had after the search page was last submitted
      */
@@ -65,58 +64,63 @@ class QbeComponent extends Object {
         } else {
             // we have posted data. Atempt to rebuild conditons array
             $conditions = array();
-            foreach( $this->owner->data[$this->modelName] as $key => $value) {
-                if (empty($value))
+
+            foreach( $this->owner->data as $modelName => $modelConditions) {
+                if (empty($modelConditions))
                     continue;
+                foreach( $modelConditions as $key => $value) {
+                    if (empty($value))
+                        continue;
 
-                $operator = $this->extractOperator($value);
+                    $operator = $this->extractOperator($value);
 
-                if (is_array($value)) {
-                    // this can only be a date field
+                    if (is_array($value)) {
+                        // this can only be a date field
 
-                    // scan for posibly empty slots in the array and
-                    // convert them into &'s, so we may turn the search into a LIKE
-                    foreach ($value as $valueKey => $valueValue)
-                        if (empty($valueValue))
-                            $value[$valueKey] = '%';
+                        // scan for posibly empty slots in the array and
+                        // convert them into &'s, so we may turn the search into a LIKE
+                        foreach ($value as $valueKey => $valueValue)
+                            if (empty($valueValue))
+                                $value[$valueKey] = '%';
 
-                    $month = $value['month'];
-                    $day = $value['day'];
-                    $year = $value['year'];
+                        $month = $value['month'];
+                        $day = $value['day'];
+                        $year = $value['year'];
 
-                    // We want all three variables to be numeric so we 'll check their
-                    // concatenation. After all PHP numbers as just strings with digits
-                    if (!is_numeric($month.$day.$year) || !checkdate( $month, $day, $year))
-                        $operator = 'LIKE';
-                    $conditionsValue = "$year-$month-$day";
-                } else {
-                    // we have normal input,
-                    // check the operator given
-                    if ($operator === '' && !is_numeric($value)) {
-                        // turn '='' to 'LIKE' for non numeric data
-                        // numeric data will be treated as if they
-                        // have an wquals operator
-                        $operator = 'LIKE';
-                        $value = str_replace('*', '%',  $value);
-                        $value = str_replace('?', '.',  $value);
-                    } else if ($operator === 'IN') {
-                        // we need to convert the input string to an aray
-                        // of the designated values
-                        $operator = '';
-                        $value = array_filter(explode( ' ', $value));
-                    } else if ($operator === '~') {
-                        // implement the between operator
-                        // values have to be passed like in the IN operator
-                        $operator = 'BETWEEN ? AND ?';
-                        $value = array_filter(explode( ' ', $value));
+                        // We want all three variables to be numeric so we 'll check their
+                        // concatenation. After all PHP numbers as just strings with digits
+                        if (!is_numeric($month.$day.$year) || !checkdate( $month, $day, $year))
+                            $operator = 'LIKE';
+                        $conditionsValue = "$year-$month-$day";
+                    } else {
+                        // we have normal input,
+                        // check the operator given
+                        if ($operator === '' && !is_numeric($value)) {
+                            // turn '='' to 'LIKE' for non numeric data
+                            // numeric data will be treated as if they
+                            // have an wquals operator
+                            $operator = 'LIKE';
+                            $value = str_replace('*', '%',  $value);
+                            $value = str_replace('?', '.',  $value);
+                        } else if ($operator === 'IN') {
+                            // we need to convert the input string to an aray
+                            // of the designated values
+                            $operator = '';
+                            $value = array_filter(explode( ' ', $value));
+                        } else if ($operator === '~') {
+                            // implement the between operator
+                            // values have to be passed like in the IN operator
+                            $operator = 'BETWEEN ? AND ?';
+                            $value = array_filter(explode( ' ', $value));
+                        }
+
+                        $conditionsValue = $value;
                     }
 
-                    $conditionsValue = $value;
+                    $conditionsKey = $modelName.".$key $operator";
+                    // add the new condition entry
+                    $conditions[trim($conditionsKey)] = $conditionsValue;
                 }
-
-                $conditionsKey = $this->modelName.".$key $operator";
-                // add the new condition entry
-                $conditions[trim($conditionsKey)] = $conditionsValue;
             }
 
             // if we have some criteria, add them in the sesion
@@ -125,6 +129,20 @@ class QbeComponent extends Object {
         }
 
         return $conditions;
+    }
+
+    /**
+     * Return speciffic value held be a model /field search imput
+     * @param type $modelName
+     * @param type $fieldName
+     */
+    public function getLastSearchFieldValue( $modelName, $fieldName)
+    {
+        $data = $this->getLastSearchData();
+
+        return isset($data[$modelName][$fieldName])
+            ? $data[$modelName][$fieldName]
+            : FALSE;
     }
 
     /**
@@ -172,8 +190,9 @@ class QbeComponent extends Object {
             return '';
 
         $input = trim($input);
+        $upCaseedInput = strtoupper($input);
         foreach ($this->SQL_OPERATORS as $operator) {
-            if ($this->startsWith($input, $operator)) {
+            if ($this->startsWith( $upCaseedInput, $operator)) {
                 $opLength = strlen($operator);
                 $inputLength = strlen($input);
                 $input = trim(substr( $input, $opLength, $inputLength - $opLength));
