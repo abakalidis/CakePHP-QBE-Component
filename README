@@ -10,9 +10,7 @@ Place this file in you APP/controllers/components folder
 Initialize your controller like this :
 
     var $components = array(
-        'Qbe' => array(
-            'ModelName' => 'Name of your model'
-        )
+        'Qbe'
     );
 
 There are two ways to create search forms:
@@ -23,7 +21,7 @@ the results and the second is to have a different search page.
 ----------------------------------------------------------------------------------------------------------
 When the search page is different then you need a controller action and a corrsponding view.
 
-The view will probably contain more or less the input fields of your model's edit page, but the form's action must be the display results (most probably the index) page 
+The view will probably contain more or less the input fields of your model's edit page, but the form's action must be set to the display results (most probably the index) page. 
 
 So your qbe view should contain an opening form tag like the following:
 <?php echo $this->Form->create('MyModel', array('action' => 'index'));?>
@@ -32,7 +30,7 @@ Keep in mind also that select inputs should also provide a means for no selectio
 	echo $this->Form->input(
             'user_id',
             array(
-                'empty' => __('All Values', true)
+                'empty' => __('All Values', TRUE)
             )
         );
 ?>
@@ -45,7 +43,7 @@ Suggested code for the qbe controller method would be somthing like this:
         // fill any combo boxes with data for the search
     }
 
-The index (results) page code will now have to look more or less like this (suposing your modelname is Item)
+The index (results) page code will now have to look more or less like this (supposing your modelname is Item)
 
     public function index()
     {
@@ -59,7 +57,7 @@ The index (results) page code will now have to look more or less like this (supo
         $this->set('items', $items);
     }
 
-The component remeber's the last set of values entered after search was last executed. To clear search criteria and display all your records, create an additional controller method and place the following code in it.
+The component remember's the last set of values entered after search was last executed. To clear search criteria and display all your records, create an additional controller method and place the following code in it.
 
     public function showAll()
     {
