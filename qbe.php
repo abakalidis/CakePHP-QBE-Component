@@ -196,7 +196,7 @@ class QbeComponent extends Object {
                 $opLength = strlen($operator);
                 $inputLength = strlen($input);
                 $input = trim(substr( $input, $opLength, $inputLength - $opLength));
-                return $operator;
+                return trim($operator);
             }
         }
         return '';
